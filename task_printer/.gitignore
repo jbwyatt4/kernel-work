@@ -4,7 +4,10 @@
 *.mod*
 *.ko
 *.cmd
+*.dwo
 .swp
 Module.symvers
 modules.order
+
+# VSCode
 .vscode
