@@ -9,7 +9,6 @@ MODULE_DESCRIPTION("Prints the first 10 tasks reported by for_each_process()");
 MODULE_VERSION("0.01");
 
 static int __init mylkm_init(void) {
-	printk(KERN_INFO "HI!\n");
 	struct task_struct *task;
 	int i = 0;
 
