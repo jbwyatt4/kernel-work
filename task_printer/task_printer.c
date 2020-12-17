@@ -12,6 +12,7 @@ static int __init mylkm_init(void) {
 	struct task_struct *task;
 	int i = 0;
 
+	rcu_read_lock();
 	for_each_process(task) {
 		/* Prints the name and PID of each task  */
 		if (i < 10) {
@@ -22,6 +23,7 @@ static int __init mylkm_init(void) {
 		}
 
 	}
+	rcu_read_unlock();
 
 	return 0;
 }
