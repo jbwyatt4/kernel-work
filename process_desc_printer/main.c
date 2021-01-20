@@ -8,9 +8,11 @@ extern char etext, edata, end;
  */
 
 int main(int argc, char *argv[]) {
-	printf("First address past:\n");
-	printf("   program text (etext)      %10p\n", &etext);
+
+	printf("End of Text Section (edata):\n");
+	/*printf("   program text (etext)      %10p\n", &etext);*/
 	printf("   initialized data (edata)  %10p\n", &edata);
+	printf("End of Data Section (start of heap):\n");
 	printf("   uninitialized data (end)  %10p\n", &end);
 
 	exit(EXIT_SUCCESS);
