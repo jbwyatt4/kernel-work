@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 extern char etext, edata, end;
 /*
@@ -9,6 +11,7 @@ extern char etext, edata, end;
 
 int main(int argc, char *argv[]) {
 
+	printf("Program PID:\n   %d\n", getpid());
 	printf("End of Text Section (edata):\n");
 	/*printf("   program text (etext)      %10p\n", &etext);*/
 	printf("   initialized data (edata)  %10p\n", &edata);
