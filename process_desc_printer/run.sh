@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-gcc main.c
+gcc -g main.c
 ./a.out

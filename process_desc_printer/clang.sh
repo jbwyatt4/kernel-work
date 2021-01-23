@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-clang main.c
+clang -g main.c
 ./a.out
