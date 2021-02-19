@@ -1,0 +1,44 @@
+diff --git a/include/trace/events/sched.h b/include/trace/events/sched.h
+index c96a4337afe6..b0c4ea661339 100644
+--- a/include/trace/events/sched.h
++++ b/include/trace/events/sched.h
+@@ -650,6 +650,26 @@ DECLARE_TRACE(sched_update_nr_running_tp,
+ 	TP_PROTO(struct rq *rq, int change),
+ 	TP_ARGS(rq, change));
+ 
++TRACE_EVENT(sched_chgrp,
++
++	TP_PROTO(struct task_struct *p, struct task_group *tg, unsigned long core_group_cookie),
++
++	TP_ARGS(p, tg, core_group_cookie),
++
++	TP_STRUCT__entry(
++		__field(	pid_t, curr_pid)
++		__field(	unsigned long, curr_cookie)
++	),
++
++	TP_fast_assign(
++		__entry->curr_pid = p->pid;
++		__entry->curr_cookie = core_group_cookie;
++	),
++
++	TP_printk("PID=%d core_group_cookie=%lu", __entry->curr_pid, __entry->curr_cookie)
++
++);
++
+ #endif /* _TRACE_SCHED_H */
+ 
+ /* This part must be outside protection */
+diff --git a/kernel/sched/coretag.c b/kernel/sched/coretag.c
+index 207fbaac5897..2147d7b05ff5 100644
+--- a/kernel/sched/coretag.c
++++ b/kernel/sched/coretag.c
+@@ -268,6 +268,8 @@ void sched_core_change_group(struct task_struct *p, struct task_group *new_tg)
+ 	 */
+ 	p->core_group_cookie = cpu_core_get_group_cookie(new_tg);
+ 
++	trace_sched_chgrp(p, new_tg, p->core_group_cookie);
++
+ 	__sched_core_update_cookie(p);
+ }
+ #endif
