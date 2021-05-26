@@ -12,7 +12,7 @@ char str_stress_ng[] = "/usr/bin/stress-ng";
 static char *argv_stress_ng[] = {"stress-ng", "--matrix", "0", "-t", "30s"};
 
 const int PR_SCHED_CORE = 62;
-const int PR_SCHED_CORE_GET	= 0;
+const int PR_SCHED_CORE_GET = 0;
 const int PR_SCHED_CORE_CREATE = 1;
 enum pid_type {PIDTYPE_PID = 0, PIDTYPE_TGID, PIDTYPE_PGID};
 
