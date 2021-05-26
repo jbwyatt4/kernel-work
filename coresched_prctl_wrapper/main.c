@@ -11,11 +11,12 @@ static char *argv_sleep[] = {"sleep", "3"};
 char str_stress_ng[] = "/usr/bin/stress-ng";
 static char *argv_stress_ng[] = {"stress-ng", "--matrix", "0", "-t", "30s"};
 
+const int PR_SCHED_CORE = 62;
+const int PR_SCHED_CORE_GET	= 0;
+const int PR_SCHED_CORE_CREATE = 1;
+enum pid_type {PIDTYPE_PID = 0, PIDTYPE_TGID, PIDTYPE_PGID};
+
 int main(int argc, char *argv[]) {
-	const int PR_SCHED_CORE = 62;
-	const int PR_SCHED_CORE_GET	= 0;
-	const int PR_SCHED_CORE_CREATE = 1;
-	enum pid_type {PIDTYPE_PID = 0, PIDTYPE_TGID, PIDTYPE_PGID};
 	unsigned long long cookie = 0;
 	int prctl_ret;
 	int ret = EXIT_SUCCESS;
@@ -24,7 +25,7 @@ int main(int argc, char *argv[]) {
 	if (pid == 0) { /* Child Process */
 		/* Wait a little for the parent process to set the child process
 		to a coregroup */
-		usleep(10);
+		usleep(1000);
 		execv(str_sleep, argv_sleep);
 		printf("Should not get here! Execv failure!\n");
 		exit(127); /* only if execv fails */
