@@ -37,9 +37,10 @@ int main(int argc, char *argv[]) {
 		//		  PIDTYPE_TGID, 0); // ret < 0
 		if (prctl_ret) {
 			printf("core_sched create failed -- TGID\n");
+			printf("%i\n", prctl_ret);
 			ret = -1;
 		}
-		printf("Waiting!\n");
+		printf("Waiting for child process to finish!\n");
 		waitpid(pid,0,0); /* wait for child to exit */
 	}
 	return ret;
