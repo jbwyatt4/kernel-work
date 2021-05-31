@@ -7,7 +7,7 @@
 #include <sys/prctl.h>
 
 char str_sleep[] = "/usr/bin/sleep";
-static char *argv_sleep[] = {"sleep", "3"};
+static char *argv_sleep[] = {"sleep", "30"};
 char str_stress_ng[] = "/usr/bin/stress-ng";
 static char *argv_stress_ng[] = {"stress-ng", "--matrix", "0", "-t", "30s"};
 
@@ -20,13 +20,18 @@ int main(int argc, char *argv[]) {
 	unsigned long long cookie = 0;
 	int prctl_ret;
 	int ret = EXIT_SUCCESS;
+	const int option = 0;
 	pid_t pid=fork();
 
 	if (pid == 0) { /* Child Process */
 		/* Wait a little for the parent process to set the child process
 		to a coregroup */
 		usleep(1000);
-		execv(str_sleep, argv_sleep);
+		if (option == 0) {
+			execv(str_sleep, argv_sleep);
+		} else {
+			execv(str_stress_ng, argv_stress_ng);
+		}
 		printf("Should not get here! Execv failure!\n");
 		exit(127); /* only if execv fails */
 	} else { /* Parent Process */
