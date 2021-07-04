@@ -12,6 +12,7 @@ checked_events = ['irq:irq_handler_entry', 'sched:sched_switch', 'sched:sched_co
 irq1 = 0
 sswitch = 0
 sched = 0
+last_event_ns_from_origin = None
 
 for msg in msg_it:
 
