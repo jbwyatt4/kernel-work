@@ -20,6 +20,8 @@ You will need a root home directory + a traces folder in the root dir.
 
 Run the deploy.sh script to copy analyize_trace to your /usr/local/bin dir.
 
+./deploy.sh
+
 Creating a trace
 ----------------
 
@@ -35,15 +37,11 @@ run the script
 
 ./take_trace.sh
 
-Please see /root/traces for your trace.
+Please see /root/traces for your trace. There should be three items: perf.data (you can delete this), ctf, and perf.meta
 
 Analyzing the trace
 --------------------
 
-Convert perf.data file into a ctf trace inside a directory named ctf:
-
-perf data convert --to-ctf=./ctf
-
 Run the script:
 
-analyze_trace ctf
+analyze_trace ctf perf.meta
