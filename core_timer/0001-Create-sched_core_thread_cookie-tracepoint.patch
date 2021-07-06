@@ -1,0 +1,61 @@
+From 4845629221ef7f63ae3685565af1cb71c2e1f3cf Mon Sep 17 00:00:00 2001
+From: "John B. Wyatt IV" <jbwyatt4@gmail.com>
+Date: Sat, 3 Jul 2021 20:15:23 -0700
+Subject: [PATCH] Create sched_core_thread_cookie tracepoint
+
+---
+ include/trace/events/sched.h | 25 +++++++++++++++++++++++++
+ kernel/sched/core.c          |  1 +
+ 2 files changed, 26 insertions(+)
+
+diff --git a/include/trace/events/sched.h b/include/trace/events/sched.h
+index c96a4337afe6..6b8caf73ac60 100644
+--- a/include/trace/events/sched.h
++++ b/include/trace/events/sched.h
+@@ -9,6 +9,31 @@
+ #include <linux/tracepoint.h>
+ #include <linux/binfmts.h>
+ 
++TRACE_EVENT(sched_core_thread_cookie,
++
++	TP_PROTO(struct task_struct *prev_core_t, struct task_struct *next_core_t),
++
++	TP_ARGS(prev_core_t, next_core_t),
++
++	TP_STRUCT__entry(
++		__field(	pid_t, prev_pid)
++		__field(	pid_t, next_pid)
++		__field(	unsigned long, prev_cookie)
++		__field(	unsigned long, next_cookie)
++		__field(	unsigned long, core_group_cookie)
++	),
++
++	TP_fast_assign(
++		__entry->prev_pid = prev_core_t->pid;
++		__entry->next_pid = next_core_t->pid;
++		__entry->prev_cookie = prev_core_t->core_cookie;
++		__entry->next_cookie = next_core_t->core_cookie;
++		__entry->core_group_cookie = 0;//core_group_cookie;
++	),
++
++	TP_printk("Prev PID=%d Next PID=%d core_group_cookie=%lu", __entry->prev_pid, __entry->next_pid, __entry->core_group_cookie)
++);
++
+ /*
+  * Tracepoint for calling kthread_stop, performed to end a kthread:
+  */
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 26235b06103c..0b5e2216d343 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -5242,6 +5242,7 @@ pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
+ 	}
+ 
+ done:
++	trace_sched_core_thread_cookie(prev, next);
+ 	set_next_task(rq, next);
+ 	return next;
+ }
+-- 
+2.25.1
+
