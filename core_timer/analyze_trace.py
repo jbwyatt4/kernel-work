@@ -73,8 +73,8 @@ for msg in msg_it:
 
 	if event.name == checked_events[2]:
 		if sched < 5:
-			msg = 'Event: {}'
-			print(msg.format(event.name))
+			msg = 'Event: {} | Prev Cookie {} | Next Cookie {}'
+			print(msg.format(event.name, event.payload_field["prev_cookie"], event.payload_field["next_cookie"]))
 		sched = sched + 1
 
 	if irq1 >= 5 and sswitch >= 5:
