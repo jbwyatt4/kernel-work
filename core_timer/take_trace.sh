@@ -36,8 +36,7 @@ do
 done
 echo "A list of threads that are being measured should be below:"
 echo $CONSTRUCT_TEXT
-CTFSECONDS=`date +%s`
-echo $CTFSECONDS > /root/traces/perf.meta
-perf record -e 'irq:irq_handler_entry' -e 'sched:sched_switch' -e 'sched:sched_core_thread_cookie' -ag $CONSTRUCT_TEXT -o /root/traces/perf.data sleep 15
+# '*' needs to be surrounded by spaces according to tools/perf/Documentation/perf-record.txt
+perf record -e 'irq: * ' -e 'sched: * ' -ag $CONSTRUCT_TEXT -o /root/traces/perf.data sleep 15
 cd /root/traces/
 perf data convert --to-ctf=./ctf
