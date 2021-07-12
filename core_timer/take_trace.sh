@@ -14,6 +14,7 @@ fi
 
 set -e # Stop script on first error
 
+mkdir -p /root/traces/perf-all
 mkdir -p /sys/fs/cgroup/cpu/test
 cd /sys/fs/cgroup/cpu/test
 echo 1 > cpu.core_tag
@@ -37,6 +38,12 @@ done
 echo "A list of threads that are being measured should be below:"
 echo $CONSTRUCT_TEXT
 # '*' needs to be surrounded by spaces according to tools/perf/Documentation/perf-record.txt
-perf record -e 'irq: * ' -e 'sched: * ' -ag $CONSTRUCT_TEXT -o /root/traces/perf.data sleep 15
+perf record -e 'irq: * ' -e 'sched: * ' -ag $CONSTRUCT_TEXT -o /root/traces/perf.data sleep 30
 cd /root/traces/
+rm -rf ctf
 perf data convert --to-ctf=./ctf
+
+perf record -e 'irq: * ' -e 'sched: * ' -ag -o /root/traces/perf-all/perf.data sleep 30
+cd /root/traces/perf-all/
+rm -rf ctf-all
+perf data convert --to-ctf=./ctf-all

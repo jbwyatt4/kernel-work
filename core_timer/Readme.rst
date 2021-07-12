@@ -18,10 +18,6 @@ This tool requires you build a perf for your custom kernel with ctf support and 
 
 You will need a root home directory + a traces folder in the root dir.
 
-Run the deploy.sh script to copy analyize_trace to your /usr/local/bin dir.
-
-./deploy.sh
-
 Creating a trace
 ----------------
 
@@ -42,6 +38,14 @@ Please see /root/traces for your trace. There should be three items: perf.data (
 Analyzing the trace
 --------------------
 
+Run the deploy.sh script to copy analyize_trace to your /usr/local/bin dir. Unless the script is changed this is a one time only operation.
+
+./deploy.sh
+
 Run the script:
 
-analyze_trace ctf perf.meta
+analyze_trace ctf
+
+Can combine both operations ( as the root user: sudo su ) when working on the script with:
+
+./deploy.sh -a
