@@ -47,3 +47,5 @@ perf record -e 'irq: * ' -e 'sched: * ' -ag -o /root/traces/perf-all/perf.data s
 cd /root/traces/perf-all/
 rm -rf ctf-all
 perf data convert --to-ctf=./ctf-all
+
+echo "Finished successfully!"
