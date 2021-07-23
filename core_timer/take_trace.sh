@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: GPL-2.0+
 
 # Run with ./take_trace.sh
 # will prompt for sudo in which it may fail the first time, run again
