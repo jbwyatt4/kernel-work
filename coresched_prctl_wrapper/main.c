@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h> /* for fork */
 #include <sys/types.h> /* for pid_t */
 #include <sys/wait.h> /* for wait */
@@ -23,17 +24,23 @@ int main(int argc, char *argv[]) {
 	unsigned long long cookie = 0;
 	int prctl_ret;
 	int ret = EXIT_SUCCESS;
-	const int option = 0;
+	int option = 0;
 	pid_t pid=fork();
+
+	if (argc == 2 && strcmp(argv[1], "stress-ng") == 0) {
+		option = 1;
+	}
 
 	if (pid == 0) { /* Child Process */
 		/* Wait a little for the parent process to set the child process
 		to a coregroup */
 		usleep(1000);
-		if (option == 0) {
-			execv(str_sleep, argv_sleep);
-		} else {
+		if (option == 1) {
+			printf("Stress-ng Test!\n");
 			execv(str_stress_ng, argv_stress_ng);
+		} else {
+			printf("Quick Sleep Test!\n");
+			execv(str_sleep, argv_sleep);
 		}
 		printf("Should not get here! Execv failure!\n");
 		exit(127); /* only if execv fails */
