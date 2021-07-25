@@ -16,6 +16,7 @@ static char *argv_stress_ng[] = {"stress-ng", "--matrix", "0", "-t", "30s"};
 const int PR_SCHED_CORE = 62;
 const int PR_SCHED_CORE_GET = 0;
 const int PR_SCHED_CORE_CREATE = 1;
+const int PR_SCHED_CORE_SHARE_TO = 2;
 enum pid_type {PIDTYPE_PID = 0, PIDTYPE_TGID, PIDTYPE_PGID};
 
 int main(int argc, char *argv[]) {
@@ -38,17 +39,31 @@ int main(int argc, char *argv[]) {
 		exit(127); /* only if execv fails */
 	} else { /* Parent Process */
 		/* PID=TID when there is only one thread for a process */
-		prctl_ret = prctl(PR_SCHED_CORE, PR_SCHED_CORE_GET, pid, PIDTYPE_PID,
-				  (unsigned long)&cookie);
-		//prctl_ret = prctl(PR_SCHED_CORE, PR_SCHED_CORE_CREATE, pid,
-		//		  PIDTYPE_TGID, 0); // ret < 0
+		prctl_ret = prctl(PR_SCHED_CORE, PR_SCHED_CORE_CREATE, pid,
+				  PIDTYPE_TGID, 0); // ret < 0
 		if (prctl_ret) {
 			printf("core_sched create failed -- TGID\n");
 			printf("%i\n", prctl_ret);
 			ret = -1;
+			goto end_label;
+		}
+		prctl_ret = prctl(PR_SCHED_CORE, PR_SCHED_CORE_GET, pid, PIDTYPE_PID,
+			(unsigned long)&cookie);
+		if (prctl_ret) {
+			printf("core_sched get cookie failed -- TGID\n");
+			printf("%i\n", prctl_ret);
+			ret = -1;
+			goto end_label;
+		}
+		printf("Cookie Value: %llu\n", cookie);
+		if (cookie <= 0) {
+			printf("Bad Cookie\n");
+			ret = -1;
+			goto end_label;
 		}
 		printf("Waiting for child process to finish!\n");
 		waitpid(pid,0,0); /* wait for child to exit */
 	}
+end_label:
 	return ret;
 }
