@@ -20,7 +20,7 @@ else
 	prctl_wrapper "stress-ng" &
 fi
 
-declare RESULT=($(cat cgroup.procs))
+declare RESULT=($(cat pids.tmp))
 
 CONSTRUCT_TEXT=""
 for i in "${RESULT[@]}"
