@@ -1,1 +1,3 @@
 a.out
+pids.tmp
+prctl_wrapper

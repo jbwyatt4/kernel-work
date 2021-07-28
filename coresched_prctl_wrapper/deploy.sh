@@ -2,10 +2,10 @@
 
 set -e
 
-gcc -g main.c
+gcc -g main.c -o prctl_wrapper
 
-./a.out
+./prctl_wrapper
 
-./a.out "stress-ng"
+./prctl_wrapper "stress-ng"
 
-sudo cp a.out /usr/local/bin/prctl_wrapper
+sudo cp prctl_wrapper /usr/local/bin/prctl_wrapper

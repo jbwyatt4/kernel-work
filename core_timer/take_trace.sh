@@ -14,20 +14,12 @@ fi
 
 set -e # Stop script on first error
 
-mkdir -p /root/traces/perf-all
-mkdir -p /sys/fs/cgroup/cpu/test
-cd /sys/fs/cgroup/cpu/test
-echo 1 > cpu.core_tag
-dmesg | grep "core sched" # ensure core sched message is running
-
 if [ "$1" == "sleep_test" ]; then
-	#warning: the sleep process must be at least 90 to be measured? [please find out why]
-	cgexec -g cpu:test sleep 300 &
+	prctl_wrapper &
 else
-	cgexec -g cpu:test stress-ng --matrix 4 -t 2m &
+	prctl_wrapper "stress-ng" &
 fi
 
-sleep 1s # Need to wait for the processes to be created
 declare RESULT=($(cat cgroup.procs))
 
 CONSTRUCT_TEXT=""

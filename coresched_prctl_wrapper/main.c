@@ -25,11 +25,13 @@ int main(int argc, char *argv[]) {
 	int prctl_ret;
 	int ret = EXIT_SUCCESS;
 	int option = 0;
-	pid_t pid=fork();
+	FILE *fp;
 
 	if (argc == 2 && strcmp(argv[1], "stress-ng") == 0) {
 		option = 1;
 	}
+
+	pid_t pid=fork();
 
 	if (pid == 0) { /* Child Process */
 		/* Wait a little for the parent process to set the child process
@@ -45,17 +47,21 @@ int main(int argc, char *argv[]) {
 		printf("Should not get here! Execv failure!\n");
 		exit(127); /* only if execv fails */
 	} else { /* Parent Process */
+		/**/
+		fp = fopen("pids.tmp", "w+");
+
+
 		/* PID=TID when there is only one thread for a process */
 		prctl_ret = prctl(PR_SCHED_CORE, PR_SCHED_CORE_CREATE, pid,
 				  PIDTYPE_TGID, 0); // ret < 0
-		if (prctl_ret) {
+		if (prctl_ret < 0) {
 			printf("core_sched create failed -- TGID\n");
 			printf("%i\n", prctl_ret);
 			ret = -1;
 			goto end_label;
 		}
-		prctl_ret = prctl(PR_SCHED_CORE, PR_SCHED_CORE_GET, pid, PIDTYPE_PID,
-			(unsigned long)&cookie);
+		prctl_ret = prctl(PR_SCHED_CORE, PR_SCHED_CORE_GET, pid,
+				  PIDTYPE_PID, (unsigned long)&cookie);
 		if (prctl_ret) {
 			printf("core_sched get cookie failed -- TGID\n");
 			printf("%i\n", prctl_ret);
