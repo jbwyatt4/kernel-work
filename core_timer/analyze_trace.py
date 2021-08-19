@@ -44,16 +44,16 @@ class ParseTrace:
 
 	# get the other cpu id of the pair
 	def get_cpu_pair(self, event, cpu_id):
-		return self.cpu_pairs(event[cpu_id])
+		return self.cpu_pairs[cpu_id]
 
 	# check if a pair event already exists
 	# if so, remove the paired events and store in a matched value
 	# if not, add the event to a list to compare future events against
 	def check_cpu_pair(self, msg, cpu_id):
 		event = msg.event
-		pair_id = self.get_cpu_pair(event, event["cpu_id"])
-		e = EventRecord(event.name, event["cpu_id"], msg.default_clock_snapshot.ns_from_origin)
-		if 0 < self.events_to_match[pair_id].length:
+		pair_id = self.get_cpu_pair(event, cpu_id)
+		e = EventRecord(event.name, cpu_id, msg.default_clock_snapshot.ns_from_origin)
+		if 0 < len(self.events_to_match[pair_id]):
 			matched = self.events_to_match[pair_id].pop(0)
 			#found_pairs
 		else:
