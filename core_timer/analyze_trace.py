@@ -6,13 +6,17 @@ import sys
 from pprint import pprint
 
 class EventRecord:
-	def __init__(self, event_type, cpu_core, time_stamp):
+	def __init__(self, event_type, msg, cpu_pair_id):
 		self.event_type = event_type
-		self.cpu_core = cpu_core
-		self.time_stamp = time_stamp
+		self.msg = msg
+		self.cpu_id = msg.event["cpu_id"]
+		self.cpu_pair_id = cpu_pair_id
+		self.time_stamp = msg.default_clock_snapshot.ns_from_origin # Nanoseconds from start of trace
 
 class ParseTrace:
 	CHECKED_EVENTS = ['irq:', 'sched:']
+	PARSE_LIMIT = 250 # How many events must be iterated before parsing stops
+	TIME_TOLERANCE = 500 # In Nanoseconds, a couple hundred microseconds
 	cpu_pairs = { # hardcoded, make dynamic later
 		0: 1,
 		1: 0,
@@ -26,8 +30,10 @@ class ParseTrace:
 		3: []
 	}
 	found_pairs = { # hardcoded, make dynamic later
+		0: [],
+		1: [],
 		2: [],
-		4: []
+		3: []
 	}
 
 	def process_main_state(cls):
@@ -43,7 +49,7 @@ class ParseTrace:
 		return self.state["CURRENT_STATE"] == self.state["STATES"]["SSWITCH_STATE"]
 
 	# get the other cpu id of the pair
-	def get_cpu_pair(self, event, cpu_id):
+	def get_cpu_pair(self, cpu_id):
 		return self.cpu_pairs[cpu_id]
 
 	# check if a pair event already exists
@@ -51,13 +57,16 @@ class ParseTrace:
 	# if not, add the event to a list to compare future events against
 	def check_cpu_pair(self, msg, cpu_id):
 		event = msg.event
-		pair_id = self.get_cpu_pair(event, cpu_id)
-		e = EventRecord(event.name, cpu_id, msg.default_clock_snapshot.ns_from_origin)
+		pair_id = self.get_cpu_pair(cpu_id)
+		e = EventRecord(event.name, msg, pair_id)
 		if 0 < len(self.events_to_match[pair_id]):
 			matched = self.events_to_match[pair_id].pop(0)
-			#found_pairs
+			self.found_pairs[pair_id].append([e, matched])
 		else:
 			self.events_to_match[pair_id].append(e)
+
+	def find_events_to_match():
+		pass
 
 	def __init__(self):
 		state = {
@@ -85,8 +94,14 @@ sched_count = 0
 unrelated_event_count = 0
 not_event_msg_count = 0
 p = ParseTrace()
+i = 0
 
 for msg in msg_it:
+
+	if p.PARSE_LIMIT > i:
+		i += 1
+	else:
+		break
 
 	if type(msg) is not bt2._EventMessageConst:
 		not_event_msg_count = not_event_msg_count + 1
@@ -108,13 +123,22 @@ for msg in msg_it:
 	if p.CHECKED_EVENTS[1] in event.name:
 		sched_count = sched_count + 1
 
-	if "sched:sched_switch" == event.name:
-		m = 'CPU of sched_switch: {}'
-		print(m.format(event.packet.context_field["cpu_id"]))
-		print(m.format(event["cpu_id"]))
-		print(event.payload_field.keys)
+	#if "sched:sched_switch" == event.name:
+	if "sched:sched_core_thread_cookie" == event.name:
+		#print(event.payload_field.keys)
+		n = 'Flag: {} CPU: {} PID: {} Next Cookie: {} Reported Cookie: {}'
+		print(n.format(event.payload_field["report_type"], event["cpu_id"], event.payload_field["perf_tid"], event.payload_field["next_cookie"], event.payload_field["core_group_cookie"]))
 		t = msg.default_clock_snapshot.ns_from_origin
 		p.check_cpu_pair(msg, event["cpu_id"])
+
+#matched_events = p.find_events_to_match()
+
+print("---------------------")
+print("---------------------")
+print("---------------------")
+#print(matched_events)
+print(p.events_to_match)
+print(p.found_pairs)
 
 
 m = """

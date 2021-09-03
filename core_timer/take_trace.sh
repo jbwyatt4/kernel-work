@@ -28,20 +28,20 @@ else
 fi
 
 sleep 1s # Need to wait for the processes to be created
-declare RESULT=($(cat cgroup.procs))
+# declare RESULT=($(cat cgroup.procs))
 
-CONSTRUCT_TEXT=""
-for i in "${RESULT[@]}"
-do
-	CONSTRUCT_TEXT="$CONSTRUCT_TEXT-p $i "
-done
-echo "A list of threads that are being measured should be below:"
-echo $CONSTRUCT_TEXT
+# CONSTRUCT_TEXT=""
+# for i in "${RESULT[@]}"
+# do
+# 	CONSTRUCT_TEXT="$CONSTRUCT_TEXT-p $i "
+# done
+# echo "A list of threads that are being measured should be below:"
+# echo $CONSTRUCT_TEXT
 # '*' needs to be surrounded by spaces according to tools/perf/Documentation/perf-record.txt
-perf record -e 'irq: * ' -e 'sched: * ' -ag $CONSTRUCT_TEXT -o /root/traces/perf.data sleep 30
-cd /root/traces/
-rm -rf ctf
-perf data convert --to-ctf=./ctf
+# perf record -e 'irq: * ' -e 'sched: * ' -ag $CONSTRUCT_TEXT -o /root/traces/perf.data sleep 30
+# cd /root/traces/
+# rm -rf ctf
+# perf data convert --to-ctf=./ctf
 
 perf record -e 'irq: * ' -e 'sched: * ' -ag -o /root/traces/perf-all/perf.data sleep 30
 cd /root/traces/perf-all/
