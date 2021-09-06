@@ -1,4 +1,4 @@
-From 4fcd70ad00b681be7b000e1220cf29ea37f16e57 Mon Sep 17 00:00:00 2001
+From 3b06506b700130d8637199ebf69c3c95f9f26fc2 Mon Sep 17 00:00:00 2001
 From: "John B. Wyatt IV" <jbwyatt4@gmail.com>
 Date: Sat, 3 Jul 2021 20:15:23 -0700
 Subject: [PATCH 1/1] Create sched_core_thread_cookie tracepoint
@@ -9,7 +9,7 @@ Subject: [PATCH 1/1] Create sched_core_thread_cookie tracepoint
  2 files changed, 32 insertions(+)
 
 diff --git a/include/trace/events/sched.h b/include/trace/events/sched.h
-index c96a4337afe6..37ddf6b8a2d4 100644
+index c96a4337afe6..f7487582d5d2 100644
 --- a/include/trace/events/sched.h
 +++ b/include/trace/events/sched.h
 @@ -9,6 +9,36 @@
@@ -28,7 +28,7 @@ index c96a4337afe6..37ddf6b8a2d4 100644
 +	TP_STRUCT__entry(
 +		__field(	pid_t, prev_pid)
 +		__field(	pid_t, next_pid)
-+		__field(        signed int, report_type )
++		__field(	signed int, report_type )
 +		__field(	unsigned long, prev_cookie)
 +		__field(	unsigned long, next_cookie)
 +		__field(	unsigned long, core_group_cookie)
