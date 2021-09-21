@@ -1,1 +1,25 @@
-.vscode
+
+
+# Common Ignores
+*.swp # Unix text file swap for VIM and Nano
+/node_modules # Node modules folder-node is used for Rails projects
+venv/
+
+instance/
+
+.coverage
+htmlcov/
+
+dist/
+build/
+*.egg-info/
+
+__pycache__/
+.pytest_cache
+*.pyc
+*.pyo # .pyc with optimizations
+*.pyd # a windows dll file for python
+
+# gitignored because it has system local specs such as where the python virtual env is
+## gitignore comments must be on a new line or the line will be ignored
+.vscode/settings.json
