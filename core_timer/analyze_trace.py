@@ -85,9 +85,9 @@ class ParseTrace:
 
 		# function: look at cases, see if they need to be ignored (under time), added to succeed, added to failed
 
-	def do_cpu_cores_match(cls, cpu_states: dict) -> bool:
+	def do_cpu_cores_match(self) -> bool:
 		tmp = -1
-		for e in cpu_states.items():
+		for e in self.cpu_states.items():
 			if e[1][0] == -1:
 				next
 			else:
