@@ -61,14 +61,16 @@ class ParseTrace:
 		timestamp = event_arr[0]
 		# function: check/insert into tracked cases
 		# we need to handle two cases
-		# 1 where the current core selects a core
 
+		# 1 where the current core selects a core
 		# check if all have the same cookie when two conditions
+
 		# 1) if they do not, do they get the same cookie in the desired time span?
 		# 2) does another thread leave the coregroup state? (a core changes to something other 0 or the same coregroup-it actually should not change at all since it should be paused)
-		# -
-		# check when a next task is selected to be a core_group, are the others already's next selected for coregroup or has the time not expired
-		if self.do_cpu_cores_match(self.cpu_states):
+
+		# check when a next task is selected to be a core_group, are the others already's next selected for coregroup or has the time not expired?
+
+		if self.do_cpu_cores_match():
 			if self.current_conflict:
 				# Check if within time limit
 				diff = timestamp - self.conflicts_found[current_conflict][1]
@@ -83,19 +85,19 @@ class ParseTrace:
 			else:
 				print("F2-No Match Continues!")
 
-		# function: look at cases, see if they need to be ignored (under time), added to succeed, added to failed
-
 	def do_cpu_cores_match(self) -> bool:
 		tmp = -1
 		for e in self.cpu_states.items():
-			if e[1][0] == -1:
-				next
+			# We skip if nothing set before or task is at 0 which means idle thread
+			if e[1][0] == -1 or e[1][1] == 0:
+				continue
 			else:
+				# If no core cookie found yet, we keep track of it
 				if tmp == -1:
 					tmp = e[1][0]
 				else:
 					if tmp == e[1][0] or 0 == e[1][0]:
-						pass
+						continue
 					else:
 						return False
 		return True
