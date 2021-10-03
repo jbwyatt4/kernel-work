@@ -6,41 +6,55 @@ import unittest
 from analyze_trace import *
 
 class ParseTraceTest(unittest.TestCase):
+
 	def test_check_events(self):
 		test_input = [
-			[
-				"Check for Core Conflict Started",
-				{0: [0, 100], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]},
-				None,
-				[],
-				[1000]
-			],
-			[
-				"Check for Core Conflict Resolved In Time",
-				{0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]},
-				0,
-				[
+			{
+				"msg": "Check for Core Conflict Started",
+				"cpu_states": {0: [0, 100], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]},
+				"current_conflict": None,
+				"conflicts_found": [],
+				"current_timestamp": 1000
+			},
+			{
+				"msg": "Check for Core Conflict Resolved In Time",
+				"cpu_states": {0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]},
+				"current_conflict": 0,
+				"conflicts_found": [
 					[False, 1000, None],
 				],
-				[2000]
-			],
+				"current_timestamp": 2000
+			},
+			{
+				"msg": "Check for Core Conflict Resolved Too Slow",
+				"cpu_states": {0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]},
+				"current_conflict": 0,
+				"conflicts_found": [
+					[False, 1000, None],
+				],
+				"current_timestamp": 2000 + ParseTrace.TIME_TOLERANCE
+			},
 		]
 		solution = [
-			"",
-			"",
+			[{0: [0, 100], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]}, [[False, 1000, None]], 0],
+			[{0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]}, [[True, 1000, 2000]], None],
+			[{0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]}, [[False, 1000, 2000 + ParseTrace.TIME_TOLERANCE]], None],
 		]
 		i = 0
 		while i < len(test_input):
-			msg = "\nBroken Test: {}\nMessage: {}".format(i, test_input[i][0])
+			msg = "\nBroken Test: {}\nMessage: {}".format(i, test_input[i]["msg"])
 			pt = ParseTrace()
-			pt.cpu_states = test_input[i][1]
-			pt.current_conflict = test_input[i][2]
-			pt.conflicts_found = test_input[i][3]
-			event_arr = test_input[i][4]
-			ret = pt.check_events(event_arr)
+			pt.cpu_states = test_input[i]["cpu_states"]
+			pt.current_conflict = test_input[i]["current_conflict"]
+			pt.conflicts_found = test_input[i]["conflicts_found"]
+			pt.check_events(timestamp=test_input[i]["current_timestamp"])
+			ret = [
+				pt.cpu_states,
+				pt.conflicts_found,
+				pt.current_conflict
+			]
 			self.assertEqual(ret, solution[i], msg)
 			i += 1
-			print(pt.conflicts_found, pt.current_conflict)
 
 	def test_do_cpu_cores_match(self):
 		test_input = [

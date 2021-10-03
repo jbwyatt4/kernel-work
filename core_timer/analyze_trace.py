@@ -57,8 +57,8 @@ class ParseTrace:
 	def get_cpu_pair(self, cpu_id):
 		return self.cpu_pairs[cpu_id]
 
-	def check_events(self, event_arr):
-		timestamp = event_arr[0]
+	def check_events(self, **kwargs):
+		timestamp = kwargs["timestamp"]
 		# function: check/insert into tracked cases
 		# we need to handle two cases
 
@@ -71,10 +71,19 @@ class ParseTrace:
 		# check when a next task is selected to be a core_group, are the others already's next selected for coregroup or has the time not expired?
 
 		if self.do_cpu_cores_match():
-			if self.current_conflict:
+			if int == type(self.current_conflict):
+
 				# Check if within time limit
-				diff = timestamp - self.conflicts_found[current_conflict][1]
-				print("R-CPU Cores Conflict Resolved!")
+				diff = timestamp - self.conflicts_found[self.current_conflict][1]
+				if self.TIME_TOLERANCE < diff:
+					# Time difference greater than set time, set conflict time and move on
+					print("B-CPU Cores Conflict Timed Out!")
+				else:
+					# Conflict within time, set resolved to true and move on
+					self.conflicts_found[self.current_conflict][0] = True
+					print("R-CPU Cores Conflict Resolved!")
+				self.conflicts_found[self.current_conflict][2] = timestamp
+				self.current_conflict = None
 			else:
 				print("S-CPU Cores Match!")
 		else:
@@ -122,9 +131,7 @@ class ParseTrace:
 				self.cpu_states[event["cpu_id"]] = [event.payload_field["next_cookie"], event.payload_field["perf_tid"]]
 				m2 = 'CPU States: {}'
 				print("---")
-				#print(m2.format(print(self.cpu_states)))
-				event_arr = [timestamp,]
-				self.check_events(event_arr)
+				self.check_events(timestamp=timestamp)
 
 			self.prev_event_msg = msg
 
