@@ -71,15 +71,17 @@ class ParseTrace:
 		# check when a next task is selected to be a core_group, are the others already's next selected for coregroup or has the time not expired?
 
 		if self.do_cpu_cores_match():
+			print("AAAAAAAAAAAAAAAAAAa")
+			# Does conflict exist?
 			if int == type(self.current_conflict):
 
 				# Check if within time limit
 				diff = timestamp - self.conflicts_found[self.current_conflict][1]
 				if self.TIME_TOLERANCE < diff:
-					# Time difference greater than set time, set conflict time and move on
-					print("B-CPU Cores Conflict Timed Out!")
+					# Time difference greater than set time, set conflict time to indicate error and move on
+					print("E-CPU Cores Conflict Timed Out!")
 				else:
-					# Conflict within time, set resolved to true and move on
+					# Conflict resolved within time, set resolved to true and move on
 					self.conflicts_found[self.current_conflict][0] = True
 					print("R-CPU Cores Conflict Resolved!")
 				self.conflicts_found[self.current_conflict][2] = timestamp
@@ -87,12 +89,12 @@ class ParseTrace:
 			else:
 				print("S-CPU Cores Match!")
 		else:
-			if not self.current_conflict:
+			if None == self.current_conflict:
 				self.current_conflict = len(self.conflicts_found)
 				self.conflicts_found.append([False, timestamp, None])
-				print("F-No Match!")
+				print("C1-No Match!")
 			else:
-				print("F2-No Match Continues!")
+				print("C2-No Match Continues!")
 
 	def do_cpu_cores_match(self) -> bool:
 		tmp = -1

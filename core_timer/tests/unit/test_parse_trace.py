@@ -17,6 +17,15 @@ class ParseTraceTest(unittest.TestCase):
 				"current_timestamp": 1000
 			},
 			{
+				"msg": "Check for Core Conflict Continued",
+				"cpu_states": {0: [0, 100], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]},
+				"current_conflict": 0,
+				"conflicts_found": [
+					[False, 1000, None],
+				],
+				"current_timestamp": 2000
+			},
+			{
 				"msg": "Check for Core Conflict Resolved In Time",
 				"cpu_states": {0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]},
 				"current_conflict": 0,
@@ -37,10 +46,11 @@ class ParseTraceTest(unittest.TestCase):
 		]
 		solution = [
 			[{0: [0, 100], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]}, [[False, 1000, None]], 0],
+			[{0: [0, 100], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]}, [[False, 1000, None]], 0],
 			[{0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]}, [[True, 1000, 2000]], None],
 			[{0: [0, 0], 1: [1, 101], 2: [-1, -1], 3: [-1, -1]}, [[False, 1000, 2000 + ParseTrace.TIME_TOLERANCE]], None],
 		]
-		i = 0
+		i = 1
 		while i < len(test_input):
 			msg = "\nBroken Test: {}\nMessage: {}".format(i, test_input[i]["msg"])
 			pt = ParseTrace()
