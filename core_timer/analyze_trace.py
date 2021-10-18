@@ -85,6 +85,23 @@ class ParseTrace:
 	def get_cpu_pair(self, cpu_id):
 		return self.cpu_pairs[cpu_id]
 
+	def do_cpu_cores_match(self) -> bool:
+		tmp = -1
+		for e in self.cpu_states.items():
+			# We skip if nothing set before or task is at 0 which means idle thread
+			if e[1][0] == -1 or e[1][1] == 0:
+				continue
+			else:
+				# If no core cookie found yet, we keep track of it
+				if tmp == -1:
+					tmp = e[1][0]
+				else:
+					if tmp == e[1][0] or 0 == e[1][0]:
+						continue
+					else:
+						return False
+		return True
+
 	def check_events(self, **kwargs):
 		timestamp = kwargs["timestamp"]
 		# function: check/insert into tracked cases
@@ -129,23 +146,6 @@ class ParseTrace:
 			else:
 				#print("C2-No Match Continues!")
 				pass
-
-	def do_cpu_cores_match(self) -> bool:
-		tmp = -1
-		for e in self.cpu_states.items():
-			# We skip if nothing set before or task is at 0 which means idle thread
-			if e[1][0] == -1 or e[1][1] == 0:
-				continue
-			else:
-				# If no core cookie found yet, we keep track of it
-				if tmp == -1:
-					tmp = e[1][0]
-				else:
-					if tmp == e[1][0] or 0 == e[1][0]:
-						continue
-					else:
-						return False
-		return True
 
 	def parse(self, msg_it):
 		for msg in msg_it:
