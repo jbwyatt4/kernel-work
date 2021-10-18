@@ -28,9 +28,6 @@ class TraceStats:
 		dt = datetime.datetime.fromtimestamp(nanos / 1e9)
 		return '{}{:03.0f}'.format(dt.strftime('%Y-%m-%dT%H:%M:%S.%f'), nanos % 1e3)
 
-	def set_trace(self, pt):
-		self.pt = pt
-
 	# Here we actually analyize the array to determine stats and errors
 	def __str__(self):
 		pt = self.pt
@@ -39,13 +36,13 @@ class TraceStats:
 
 		# Get final time
 		if conflicts[-1][2] == None:
-			self.final_time = conflicts[-1][1]
+			self.final_time = conflicts[-1]["begin_timestamp"]
 			conflicts.pop()
 		else:
-			self.final_time = conflicts[-1][2]
+			self.final_time = conflicts[-1]["end_timestamp"]
 		# cases to handle:
 		for e in conflicts:
-			times.append(e[2] - e[1])
+			times.append(e["end_timestamp"] - e["begin_timestamp"])
 
 
 class ParseTrace:
@@ -77,13 +74,38 @@ class ParseTrace:
 	}
 	# We want to record multiple failed events to see if it produces a pattern
 	# end_timestamp represents the
-	conflicts_found = [] # [ [conflict_resolved: boolean, begin_timestamp, end_timestamp ] ]
+	conflicts_found = [] # see new_trace_record
+
 	current_conflict = None # int to conflicts_found
 	prev_event_msg = None
 
 	# get the other cpu id of the pair
 	def get_cpu_pair(self, cpu_id):
 		return self.cpu_pairs[cpu_id]
+
+	@staticmethod
+	def new_trace_record(**kwargs):
+		# [{
+		# 	conflict_resolved: boolean,
+		# 	begin_timestamp: int,
+		# 	end_timestamp: int,
+		# 	prev_process: str,
+		# 	next_process: str,
+		# }]
+		options = {
+			"conflict_resolved": False,
+			"begin_timestamp": None,
+			"end_timestamp": None,
+			"prev_process": None,
+			"next_process": None,
+		}
+		options.update(kwargs)
+		return options
+
+	@staticmethod
+	def ntr(**kwargs):
+		# Convience Method for testing
+		return ParseTrace.new_trace_record(**kwargs)
 
 	def do_cpu_cores_match(self) -> bool:
 		tmp = -1
@@ -121,19 +143,19 @@ class ParseTrace:
 			if int == type(self.current_conflict):
 
 				# Check if within time limit
-				diff = timestamp - self.conflicts_found[self.current_conflict][1]
+				diff = timestamp - self.conflicts_found[self.current_conflict]["begin_timestamp"]
 				if self.TIME_TOLERANCE < diff:
 					# Time difference greater than set time, set conflict time to indicate error and move on
 					print("E-CPU Cores Conflict Timed Out!")
-					t_0 = TraceStats.human_readable_time(self.conflicts_found[self.current_conflict][1])
+					t_0 = TraceStats.human_readable_time(self.conflicts_found[self.current_conflict]["begin_timestamp"])
 					t_1 = TraceStats.human_readable_time(timestamp)
 					print(t_0,t_1)
 					pass
 				else:
 					# Conflict resolved within time, set resolved to true and move on
-					self.conflicts_found[self.current_conflict][0] = True
+					self.conflicts_found[self.current_conflict]["conflict_resolved"] = True
 					#print("R-CPU Cores Conflict Resolved!")
-				self.conflicts_found[self.current_conflict][2] = timestamp
+				self.conflicts_found[self.current_conflict]["end_timestamp"] = timestamp
 				self.current_conflict = None
 			else:
 				#print("S-CPU Cores Match!")
@@ -141,7 +163,10 @@ class ParseTrace:
 		else:
 			if None == self.current_conflict:
 				self.current_conflict = len(self.conflicts_found)
-				self.conflicts_found.append([False, timestamp, None])
+				c = self.new_trace_record(
+					begin_timestamp=timestamp
+				)
+				self.conflicts_found.append(c)
 				#print("C1-No Match!")
 			else:
 				#print("C2-No Match Continues!")
