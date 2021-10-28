@@ -7,15 +7,9 @@ from pprint import pprint
 import bt2
 
 class EventRecord:
-	def __init__(self, event_type, msg, cpu_pair_id):
-		self.event_type = event_type
-		self.msg = msg
-		self.cpu_id = msg.event["cpu_id"]
-		self.cpu_pair_id = cpu_pair_id
-		self.time_stamp = msg.default_clock_snapshot.ns_from_origin # Nanoseconds from start of trace
-		self.tracking_groups = []
-		self.successful_groups = []
-		self.failed_groups = []
+	def __init__(self):
+		pass
+
 
 class TraceStats:
 	# total_runtime
@@ -36,37 +30,24 @@ class TraceStats:
 
 		# Get final time
 		if conflicts[-1][2] == None:
+			# Remove incomplete entry
 			self.final_time = conflicts[-1]["begin_timestamp"]
 			conflicts.pop()
 		else:
 			self.final_time = conflicts[-1]["end_timestamp"]
 		# cases to handle:
 		for e in conflicts:
-			times.append(e["end_timestamp"] - e["begin_timestamp"])
+			#times.append(e["end_timestamp"] - e["begin_timestamp"])
+			pass
 
 
 class ParseTrace:
+	# 1,000 milliseconds in a second
+	# 1,000,000 nanoseconds in a millisecond
 	MILLSECOND_TOLERANCE = 10 # 0.01
 	TIME_TOLERANCE = MILLSECOND_TOLERANCE * 1000000 # In Nanoseconds, a couple hundred microseconds, the amount recorded in the traces
-	cpu_pairs = { # hardcoded, make dynamic later
-		0: 1,
-		1: 0,
-		2: 3,
-		3: 2
-	}
-	events_to_match = { # hardcoded, make dynamic later
-		0: [],
-		1: [],
-		2: [],
-		3: []
-	}
-	found_pairs = { # hardcoded, make dynamic later
-		0: [],
-		1: [],
-		2: [],
-		3: []
-	}
 	cpu_states = { # [cookie, pid]
+		# hardcoded, make dynamic later
 		0: [-1, -1],
 		1: [-1, -1],
 		2: [-1, -1],
@@ -78,10 +59,6 @@ class ParseTrace:
 
 	current_conflict = None # int to conflicts_found
 	prev_event_msg = None
-
-	# get the other cpu id of the pair
-	def get_cpu_pair(self, cpu_id):
-		return self.cpu_pairs[cpu_id]
 
 	@staticmethod
 	def new_trace_record(**kwargs):
@@ -104,7 +81,7 @@ class ParseTrace:
 
 	@staticmethod
 	def ntr(**kwargs):
-		# Convience Method for testing
+		# Convience method for testing
 		return ParseTrace.new_trace_record(**kwargs)
 
 	def do_cpu_cores_match(self) -> bool:
@@ -126,6 +103,8 @@ class ParseTrace:
 
 	def check_events(self, **kwargs):
 		timestamp = kwargs["timestamp"]
+		prev_p = kwargs["prev_p"]
+		next_p = kwargs["next_p"]
 		# function: check/insert into tracked cases
 		# we need to handle two cases
 
@@ -138,7 +117,6 @@ class ParseTrace:
 		# check when a next task is selected to be a core_group, are the others already's next selected for coregroup or has the time not expired?
 
 		if self.do_cpu_cores_match():
-			#print("AAAAAAAAAAAAAAAAAAa")
 			# Does conflict exist?
 			if int == type(self.current_conflict):
 
@@ -150,7 +128,6 @@ class ParseTrace:
 					t_0 = TraceStats.human_readable_time(self.conflicts_found[self.current_conflict]["begin_timestamp"])
 					t_1 = TraceStats.human_readable_time(timestamp)
 					print(t_0,t_1)
-					pass
 				else:
 					# Conflict resolved within time, set resolved to true and move on
 					self.conflicts_found[self.current_conflict]["conflict_resolved"] = True
@@ -164,7 +141,9 @@ class ParseTrace:
 			if None == self.current_conflict:
 				self.current_conflict = len(self.conflicts_found)
 				c = self.new_trace_record(
-					begin_timestamp=timestamp
+					begin_timestamp=timestamp,
+					prev_process=prev_p,
+					next_process=next_p,
 				)
 				self.conflicts_found.append(c)
 				#print("C1-No Match!")
@@ -185,15 +164,15 @@ class ParseTrace:
 				pass
 
 			elif "sched:sched_core_thread_cookie" == event.name:
-				#print(event.payload_field.keys)
+				#print(event.payload_field)
 				m1 = 'Flag: {} CPU: {} PID: {} Prev Cookie: {} Next Cookie: {} Reported Cookie: {} Timestamp: {}'
 				#print(m1.format(event.payload_field["report_type"], event["cpu_id"], event.payload_field["perf_tid"], event.payload_field["prev_cookie"], event.payload_field["next_cookie"], event.payload_field["core_group_cookie"], timestamp))
-
 				self.cpu_states[event["cpu_id"]] = [event.payload_field["next_cookie"], event.payload_field["perf_tid"]]
-				m2 = 'CPU States: {}'
-				#print("---")
-				self.check_events(timestamp=timestamp)
-
+				self.check_events(
+					timestamp=timestamp,
+					next_p=None,
+					prev_p=None,
+				)
 			self.prev_event_msg = msg
 
 	def print_report(self):
