@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 import sys, datetime
+from copy import deepcopy
 from pprint import pprint
 
 import bt2
@@ -14,22 +15,41 @@ class EventRecord:
 class TraceStats:
 	# total_runtime
 	def __init__(self):
+		self.time_tolerance = None
 		self.final_time = 0
 		self.not_event_msg_count = 0
+		self.irq_count = 0
+		self.kvm_count = 0
+		self.sched_count = 0
+		self.sched_core_thread_cookie = 0
+		self.sched_switch_count = 0
+		self.succeeded_core_cookie = 0
+		self.failed_core_cookie = 0
 
 	@staticmethod
-	def human_readable_time(nanos):
+	def human_readable_timestamp(nanos):
 		dt = datetime.datetime.fromtimestamp(nanos / 1e9)
 		return '{}{:03.0f}'.format(dt.strftime('%Y-%m-%dT%H:%M:%S.%f'), nanos % 1e3)
 
-	# Here we actually analyize the array to determine stats and errors
-	def __str__(self):
-		pt = self.pt
+	def increment_eventtype(self, type):
+		if "irq:" in type:
+			self.irq_count += 1
+		if "kvm:" in type:
+			self.sched_count += 1
+		if "sched:" in type:
+			self.sched_count += 1
+		if "sched:sched_core_thread_cookie" in type:
+			self.sched_core_thread_cookie += 1
+		if "sched:sched_switch" in type:
+			self.sched_switch_count += 1
+
+	# Here we analyize the array to determine stats and errors
+	def return_report(self, conflicts_found):
 		times = []
-		conflicts = pt.conflicts_found.deepcopy()
+		conflicts = deepcopy(conflicts_found)
 
 		# Get final time
-		if conflicts[-1][2] == None:
+		if conflicts[-1]["end_timestamp"] == None:
 			# Remove incomplete entry
 			self.final_time = conflicts[-1]["begin_timestamp"]
 			conflicts.pop()
@@ -38,14 +58,31 @@ class TraceStats:
 		# cases to handle:
 		for e in conflicts:
 			#times.append(e["end_timestamp"] - e["begin_timestamp"])
+			if e["conflict_resolved"]:
+				self.succeeded_core_cookie += 1
+			else:
+				self.failed_core_cookie += 1
 			pass
+		msg = f'''
+	--- Summary Report ---
+	IRQ:	{self.irq_count}
+	KVM:	{self.kvm_count}
+	SCHED:	{self.sched_count}
+	sched_core_thread_cookie count: {self.sched_core_thread_cookie}
+	sched_switch count:	{self.sched_switch_count}
+
+	Time Tolerance: {self.time_tolerance/1000000} ms
+	Succeeded: {self.succeeded_core_cookie}
+	Failed: {self.failed_core_cookie}
+		'''
+		return msg
 
 
 class ParseTrace:
 	# 1,000 milliseconds in a second
 	# 1,000,000 nanoseconds in a millisecond
-	MILLSECOND_TOLERANCE = 10 # 0.01
-	TIME_TOLERANCE = MILLSECOND_TOLERANCE * 1000000 # In Nanoseconds, a couple hundred microseconds, the amount recorded in the traces
+	MILLSECOND_TOLERANCE = 1 # 0.01
+	TIME_TOLERANCE = MILLSECOND_TOLERANCE * 1000000 # In Nanoseconds, a couple hundred microseconds; the amount recorded in the traces
 	cpu_states = { # [cookie, pid]
 		# hardcoded, make dynamic later
 		0: [-1, -1],
@@ -62,19 +99,12 @@ class ParseTrace:
 
 	@staticmethod
 	def new_trace_record(**kwargs):
-		# [{
-		# 	conflict_resolved: boolean,
-		# 	begin_timestamp: int,
-		# 	end_timestamp: int,
-		# 	prev_process: str,
-		# 	next_process: str,
-		# }]
 		options = {
-			"conflict_resolved": False,
-			"begin_timestamp": None,
-			"end_timestamp": None,
-			"prev_process": None,
-			"next_process": None,
+			"conflict_resolved": False, # boolean
+			"begin_timestamp": None, # int
+			"end_timestamp": None, # int
+			"prev_process": None, # str
+			"next_process": None, # str
 		}
 		options.update(kwargs)
 		return options
@@ -124,10 +154,10 @@ class ParseTrace:
 				diff = timestamp - self.conflicts_found[self.current_conflict]["begin_timestamp"]
 				if self.TIME_TOLERANCE < diff:
 					# Time difference greater than set time, set conflict time to indicate error and move on
-					print("E-CPU Cores Conflict Timed Out!")
-					t_0 = TraceStats.human_readable_time(self.conflicts_found[self.current_conflict]["begin_timestamp"])
-					t_1 = TraceStats.human_readable_time(timestamp)
-					print(t_0,t_1)
+					#print("E-CPU Cores Conflict Timed Out!")
+					t_0 = TraceStats.human_readable_timestamp(self.conflicts_found[self.current_conflict]["begin_timestamp"])
+					t_1 = TraceStats.human_readable_timestamp(timestamp)
+					#print(t_0,t_1)
 				else:
 					# Conflict resolved within time, set resolved to true and move on
 					self.conflicts_found[self.current_conflict]["conflict_resolved"] = True
@@ -160,6 +190,8 @@ class ParseTrace:
 			event = msg.event
 			timestamp = msg.default_clock_snapshot.ns_from_origin
 
+			self.ts.increment_eventtype(event.name)
+
 			if "" == event.name:
 				pass
 
@@ -175,13 +207,15 @@ class ParseTrace:
 				)
 			self.prev_event_msg = msg
 
-	def print_report(self):
-		pass
+	def print_report(s):
+		msg = s.ts.return_report(s.conflicts_found)
+		print(msg)
 
 	def __init__(self):
 		self.state = {
 		}
 		self.ts = TraceStats()
+		self.ts.time_tolerance = self.TIME_TOLERANCE
 
 if __name__ == "__main__":
 	trace_file_path = sys.argv[1]

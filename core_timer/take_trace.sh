@@ -14,6 +14,8 @@ fi
 
 set -e # Stop script on first error
 
+cwd=$PWD
+
 mkdir -p /root/traces/perf-all
 mkdir -p /sys/fs/cgroup/cpu/test
 cd /sys/fs/cgroup/cpu/test
@@ -43,8 +45,8 @@ sleep 1s # Need to wait for the processes to be created
 # rm -rf ctf
 # perf data convert --to-ctf=./ctf
 
-perf record -e 'irq: * ' -e 'sched: * ' -ag -o /root/traces/perf-all/perf.data sleep 30
-cd /root/traces/perf-all/
+cd $cwd
+perf record -e 'irq: * ' -e 'sched: * ' -e 'kvm: * ' -ag -o perf.data sleep 30
 rm -rf ctf-all
 perf data convert --to-ctf=./ctf-all
 
